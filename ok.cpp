@@ -1,4 +1,4 @@
-#include <iostream>
+#include <bits/stdc++.h>
 #include <fstream>
 #include <cstdlib>
 #include <ctime>
@@ -61,33 +61,16 @@ public:
     {
         Product temp=Product(name,value);
         return temp;
-    }
-} product;
+    }   friend void Add_Product();
+} ;// product;
 
 void Homepage();
 void Customer_Panel();
 void Employee_Panel();
 void Register_Customer();
 void Login_Customer();
-
-void View_Product()
-{
-
-    cout << "<== E-Commerce Management ==>" << endl << endl;
-    cout << "Customer Panel -> View_Product" << endl;
-    ifstream fin;
-    fin.open("product.txt", ios::in);
-
-    fin.seekg(0);
-    cout<<"Product_name"<<"   =>  "<<"Product_value"<<endl<<endl;
-    fin.read((char*)&product, sizeof(product));
-    while (!fin.eof())
-    {
-        cout<<product.name<<"      =>   "<<product.value<<endl;
-        fin.read((char*)&product, sizeof(product));
-    }
-    fin.close();
-}
+void View_Product();
+void ADD_Product();
 
 
 void Add_Product()
@@ -103,41 +86,83 @@ void Add_Product()
     cin.ignore();
     getline(cin, name);
     cout << "Enter value: ";
-    cin>>value;
-    //getline(cin, value);
-    product = Product(name,value);
+    cin >> value;
+
     ofstream fout;
     fout.open("product.txt", ios::app);
-    fout.write((char*)&product, sizeof(product));
-    fout.close();
-    cout << endl << endl;
-    cout << "Product Added Successful!" << endl << "Press any key to continue...";
-    cout<<endl;
+    if (fout.is_open()) {
+        fout << name << "," << value << endl;
+        fout.close();
+        cout << endl << endl;
+        cout << "Product Added Successfully!" << endl << "Press any key to continue...";
+    }
+    else {
+        cout << "Unable to open the product file." << endl;
+    }
+
+    cout << endl;
     getchar(); //lock screen until enter
     View_Product();
-    cout<<endl;
-    cout<<"1.Add product"<<endl;
-    cout<<"2.Homepage"<<endl;
-
+    cout << endl;
+   while(1){
+     cout << "1. Add product" << endl;
+    cout << "2. Homepage" << endl;
     int ak;
-    cin>>ak;
-    switch(ak)
+    cin >> ak;
+    switch (ak)
     {
-    case(1):
+    case 1:
     {
         Add_Product();
         break;
     }
-    case(2):
+    case 2:
     {
         Homepage();
         break;
     }
-    default:
-        cout<<"invalid"<<endl;
+    case 3:
         View_Product();
-    }
+        break;
+    default:
+        cout << "Invalid option" << endl<<endl;
 
+
+    }
+   }
+}
+
+
+
+void View_Product()
+{
+    cout << "<== E-Commerce Management ==>" << endl << endl;
+    cout << "Customer Panel -> View_Product" << endl;
+    ifstream fin;
+    fin.open("product.txt", ios::in);
+
+    if (fin.is_open()) {
+        cout << "Product_name" << "   =>  " << "Product_value" << endl << endl;
+        string line;
+        while (getline(fin, line)) {
+            size_t commaPos = line.find(',');
+            if (commaPos != string::npos) {
+                string name = line.substr(0, commaPos); //to extract the product name and value from the line, based on the position of the comma.
+                string valueStr = line.substr(commaPos + 1);
+
+                try {
+                    //error handeling when can not convert string to double value;
+                    double value = stod(valueStr);
+                    cout << name << "      =>   " << value << endl;
+                } catch (const std::invalid_argument& e) {
+                    cout << "Error: Invalid product value for " << name << endl;
+                }
+            }
+        }
+        fin.close();
+    } else {
+        cout << "Unable to open the product file." << endl;
+    }
 }
 
 
@@ -157,24 +182,59 @@ void Login_Employee()
     fin.open("employee.txt", ios::in);
     fin.seekg(0);
 
-    fin.read((char*)&employee, sizeof(employee));
-    while (!fin.eof())
+    bool isLoggedIn = false;
+    while (fin.read((char*)&employee, sizeof(employee)))
     {
         if (name == employee.name && pass == employee.password)
         {
             cout << "Hello " << name << endl;
+            isLoggedIn = true;
             break;
         }
-        fin.read((char*)&employee, sizeof(employee));
     }
     fin.close();
+
+    if (!isLoggedIn) {
+        cout << "Invalid username or password. Login failed." << endl;
+       while(1){
+          int a;
+        cout<< " 1.login_Panel"<<endl;
+        cout<< " 2.Homepage"<<endl;
+        cout<< " 3.Employee_Panel"<<endl<<endl;
+        cout<< "Enter your choice :";
+
+        cin>>a;
+         switch(a)
+         {
+         case 1:
+            Login_Employee();
+            break;
+
+         case 2:
+            Homepage();
+            break;
+         case 3:
+            Employee_Panel();
+            break;
+         default:
+            cout<<"invalid, Choose right option : "<<endl;
+         }
+
+       }
+
+        return;
+    }
+
     cout << endl << endl;
-    cout << "Login Successful!" << endl << "Press any key to continue...";
-    cout<<endl;
+    cout << "Press any key to continue...";
     getchar(); //lock screen until enter
-    View_Product();
-    Add_Product();
+    if (isLoggedIn) {
+        View_Product();
+        Add_Product();
+    }
 }
+
+
 
 void Register_Employee()
 {
@@ -184,7 +244,7 @@ void Register_Employee()
     cout << "Employee Panel -> Register" << endl;
     int id;
     string name, pass, phone;
-    id = static_cast<int>(time(0));
+    id = static_cast<int>(time(0)); // used for individi id generate
     id *= 999;
     id %= 1000;
     id += 10000;
@@ -242,6 +302,8 @@ void Employee_Panel()
     }
 }
 
+
+
 void Login_Customer()
 {
     int ch;
@@ -256,25 +318,59 @@ void Login_Customer()
     getline(cin, pass);
     ifstream fin;
     fin.open("customer.txt", ios::in);
-    fin.seekg(0);
+    fin.seekg(0);//fin stands for read input and seekg(0) for starting line;
 
-    fin.read((char*)&customer, sizeof(customer));
-    while (!fin.eof())
+    bool isLoggedIn = false;
+    while (fin.read((char*)&customer, sizeof(customer)))
     {
-        // cout << customer.name << endl;
         if (name == customer.name && pass == customer.password)
         {
             cout << "Hello " << name << endl;
+            isLoggedIn = true;
             break;
         }
-        fin.read((char*)&customer, sizeof(customer));
     }
     fin.close();
+
+    if (!isLoggedIn) {
+        cout << "Invalid username or password. -> Login failed." << endl;
+       while(1){
+          int a;
+        cout<< " 1. login_Panel"<<endl;
+        cout<< " 2. Homepage"<<endl;
+        cout<< " 3. Customer_Panel"<<endl<<endl;
+        cout<< "    Enter your choice :";
+
+        cin>>a;
+         switch(a)
+         {
+         case 1:
+            Login_Customer();
+            break;
+
+         case 2:
+            Homepage();
+            break;
+         case 3:
+            Customer_Panel();
+            break;
+         default:
+            cout<<" Invalid , Choose Right Option : "<<endl;
+         }
+
+       }
+        return;
+    }
+
     cout << endl << endl;
-    cout << "Login Successful!" << endl << "Press any key to continue...";
+    cout << "Press any key to continue...";
     getchar(); //lock screen until enter
-    View_Product();
+    if (isLoggedIn) {
+        View_Product();
+    }
 }
+
+
 
 void Register_Customer()
 {
@@ -333,6 +429,7 @@ void Customer_Panel()
             break;
         default:
             cout << "Invalid Option" << endl;
+            Customer_Panel();
         }
         cout << endl << endl;
         cout << "Press any key to continue...";
@@ -345,11 +442,12 @@ void Homepage()
     int ch;
     while (1)
     {
-        system("cls");
+        system("cls");//used for clear scren
         cout << "<== E-Commerce Management ==>" << endl << endl;
         cout << "1. As a Customer" << endl;
         cout << "2. As a Employee" << endl;
         cout << "3. As a Admin" << endl;
+        cout << "4. Exit "<<endl;
         cout << endl;
         cout << "Enter Choice: ";
         cin >> ch;
@@ -362,13 +460,19 @@ void Homepage()
             Employee_Panel();
             break;
         case 3:
-            //Admin_Panel();
+           // Admin_Panel();
             break;
+        case 4:
+            exit(0);
         default:
             cout << "Invalid Option" << endl;
+             cout << endl << endl;
+
+          getchar(); //lock screen until enter
+          cout << "Press any key to continue...";
+          Homepage();
         }
-        cout << endl << endl;
-        cout << "Press any key to continue...";
+
         getchar(); //lock screen until enter
     }
 }
@@ -377,5 +481,6 @@ int main()
 {
     Homepage();
     return 0;
-    
+
 }
+
